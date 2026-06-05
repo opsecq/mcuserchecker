@@ -4,433 +4,425 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LARPTOOL — Minecraft Checker</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne+Mono&family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#07070d;--bg2:#0e0e1a;--bg3:#13131f;--border:#1f1f35;
-    --purple:#7c3aed;--purple2:#5b21b6;
-    --green:#22c55e;--green-dim:#14532d;
-    --red:#ef4444;--red-dim:#450a0a;
-    --yellow:#eab308;--yellow-dim:#422006;
-    --cyan:#06b6d4;--gray:#374151;--gray-dim:#1f2937;
-    --text:#e2e8f0;--text-dim:#64748b;--text-muted:#334155;
-  }
-  html,body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden}
-  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
-    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)}
-  .wrapper{max-width:880px;margin:0 auto;padding:32px 20px 60px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  .banner{text-align:center;margin-bottom:28px}
-  .banner pre{color:var(--purple);font-size:clamp(5px,1.1vw,10px);line-height:1.2;display:inline-block;
-    text-shadow:0 0 18px rgba(124,58,237,0.5);animation:flicker 8s infinite}
-  @keyframes flicker{0%,95%,100%{opacity:1}96%{opacity:.85}97%{opacity:1}98%{opacity:.9}}
-  .banner-sub{color:var(--text-dim);font-size:11px;letter-spacing:4px;margin-top:6px}
-  .divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+:root{
+  --ink:#0a0a0f;
+  --ink2:#0f0f1a;
+  --ink3:#141420;
+  --line:#1e1e2e;
+  --line2:#252538;
+  --accent:#00ff88;
+  --accent2:#00cc6a;
+  --accent-dim:rgba(0,255,136,0.08);
+  --accent-glow:rgba(0,255,136,0.15);
+  --red:#ff3b5c;
+  --red-dim:rgba(255,59,92,0.08);
+  --amber:#ffaa00;
+  --amber-dim:rgba(255,170,0,0.08);
+  --blue:#4da6ff;
+  --text:#e8e8f0;
+  --text2:#8888a0;
+  --text3:#444455;
+  --font-head:'Syne',sans-serif;
+  --font-mono:'DM Mono',monospace;
+  --font-alt:'Syne Mono',monospace;
+}
 
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
-  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px 10px;text-align:center;position:relative;overflow:hidden}
-  .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
-  .stat-card.s-avail::after{background:var(--green)}
-  .stat-card.s-taken::after{background:var(--red)}
-  .stat-card.s-error::after{background:var(--yellow)}
-  .stat-card.s-total::after{background:var(--purple)}
-  .stat-val{font-family:'Orbitron',monospace;font-size:26px;font-weight:700;line-height:1;margin-bottom:5px}
-  .stat-card.s-avail .stat-val{color:var(--green)}
-  .stat-card.s-taken .stat-val{color:var(--red)}
-  .stat-card.s-error .stat-val{color:var(--yellow)}
-  .stat-card.s-total .stat-val{color:var(--cyan)}
-  .stat-lbl{font-size:9px;letter-spacing:2px;color:var(--text-dim)}
+html,body{background:var(--ink);color:var(--text);font-family:var(--font-mono);min-height:100vh;overflow-x:hidden}
 
-  /* cors banner */
-  .cors-notice{border-radius:5px;padding:10px 14px;font-size:11px;margin-bottom:14px;line-height:1.7}
-  .cors-notice.warn{background:#1a0d00;border:1px solid #5c3000;color:#f97316}
-  .cors-notice.ok  {background:#001a08;border:1px solid #005c20;color:#22c55e}
-  .cors-notice b{font-weight:500}
+/* scanline overlay */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);
+}
 
-  .mode-row{display:flex;gap:8px;margin-bottom:14px;align-items:center;font-size:11px;color:var(--text-dim);letter-spacing:1px;flex-wrap:wrap}
-  .mode-btn{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 14px;border-radius:3px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text-dim);transition:all 0.15s}
-  .mode-btn.active{border-color:var(--purple);color:var(--purple);background:#1a0a3a}
+/* grid background */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size:48px 48px;
+  opacity:0.35;
+}
 
-  .controls{display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
-  .btn{font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;padding:9px 20px;border-radius:4px;border:1px solid var(--border);cursor:pointer;background:var(--bg3);color:var(--text);transition:all 0.15s;text-transform:uppercase}
-  .btn:hover{border-color:var(--purple);color:var(--purple)}
-  .btn.primary{background:var(--purple2);border-color:var(--purple);color:#fff}
-  .btn.primary:hover{background:var(--purple)}
-  .btn.danger{border-color:var(--red-dim);color:var(--red)}
-  .btn.danger:hover{background:var(--red-dim)}
-  .btn:disabled{opacity:0.35;cursor:not-allowed}
-  .workers-wrap{display:flex;align-items:center;gap:8px;margin-left:auto;color:var(--text-dim);font-size:11px}
-  .workers-wrap input[type=range]{accent-color:var(--purple);width:80px}
-  #workerLabel{color:var(--purple);min-width:20px}
+.wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:48px 24px 80px}
 
-  .log-panel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:16px}
-  .log-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:2px;color:var(--text-dim)}
-  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:pulse 1.2s ease-in-out infinite}
-  .live-dot.off{background:var(--gray);animation:none}
-  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(34,197,94,0)}}
-  #rateDisplay{color:var(--purple)}
-  .log-body{height:320px;overflow-y:auto;padding:8px 0;scroll-behavior:smooth}
-  .log-body::-webkit-scrollbar{width:4px}
-  .log-body::-webkit-scrollbar-track{background:var(--bg2)}
-  .log-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-  .log-line{display:flex;align-items:center;gap:10px;padding:4px 14px;font-size:12px;border-left:2px solid transparent;animation:slideIn 0.12s ease}
-  @keyframes slideIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
-  .log-line.avail{border-left-color:var(--green)}
-  .log-line.taken{border-left-color:var(--red);opacity:0.5}
-  .log-line.error{border-left-color:var(--yellow);opacity:0.6}
-  .log-worker{color:var(--text-muted);min-width:38px;font-size:10px}
-  .badge{font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:3px;min-width:80px;text-align:center;font-weight:bold}
-  .badge.avail{background:var(--green-dim);color:var(--green);border:1px solid #166534}
-  .badge.taken{background:var(--red-dim);color:var(--red);border:1px solid #7f1d1d}
-  .badge.error{background:var(--yellow-dim);color:var(--yellow);border:1px solid #713f12}
-  .log-name{flex:1}
-  .log-name.avail{color:var(--green)}
-  .log-name.taken{color:#6b7280}
-  .log-name.error{color:var(--yellow)}
-  .log-ts{color:var(--text-muted);font-size:10px}
+/* ── HEADER ── */
+.header{margin-bottom:56px;display:flex;flex-direction:column;gap:0}
+.header-eyebrow{font-family:var(--font-alt);font-size:10px;letter-spacing:6px;color:var(--text3);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.header-eyebrow::after{content:'';flex:1;height:1px;background:var(--line2)}
+.hero-title{font-family:var(--font-head);font-size:clamp(52px,8vw,96px);font-weight:800;line-height:0.9;letter-spacing:-2px;color:var(--text)}
+.hero-title span{color:var(--accent);display:inline-block;animation:titlePulse 4s ease-in-out infinite}
+@keyframes titlePulse{0%,100%{text-shadow:0 0 40px rgba(0,255,136,0.4)}50%{text-shadow:0 0 80px rgba(0,255,136,0.7)}}
+.hero-sub{font-family:var(--font-alt);font-size:11px;letter-spacing:4px;color:var(--text2);margin-top:16px;display:flex;align-items:center;gap:12px}
+.hero-sub::before{content:'';width:32px;height:1px;background:var(--accent);opacity:0.5}
 
-  .saved-section{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .saved-box{background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden}
-  .saved-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:2px;color:var(--text-dim)}
-  .saved-header span:first-child{display:flex;align-items:center;gap:6px}
-  .saved-dot{width:6px;height:6px;border-radius:50%}
-  .saved-dot.g{background:var(--green)}
-  .saved-count{font-family:'Orbitron',monospace;font-size:11px}
-  .saved-count.g{color:var(--green)}
-  .saved-list{height:130px;overflow-y:auto;padding:6px 0}
-  .saved-list::-webkit-scrollbar{width:3px}
-  .saved-list::-webkit-scrollbar-thumb{background:var(--border)}
-  .saved-item{padding:3px 12px;font-size:12px;animation:slideIn 0.12s ease;color:var(--green)}
-  .dl-row{display:flex;gap:8px;padding:6px 8px}
-  .dl-btn{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 12px;border-radius:3px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text-dim);transition:all 0.15s}
-  .dl-btn.g:hover{border-color:var(--green);color:var(--green)}
-  .footer{margin-top:20px;display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);letter-spacing:1px}
+/* ── STATS BAR ── */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-bottom:32px;border:1px solid var(--line2);border-radius:6px;overflow:hidden}
+.stat{background:var(--ink2);padding:20px 16px;position:relative;overflow:hidden;transition:background 0.2s}
+.stat::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;transform:scaleX(0);transform-origin:left;transition:transform 0.4s ease}
+.stat:hover{background:var(--ink3)}
+.stat-label{font-family:var(--font-alt);font-size:9px;letter-spacing:3px;color:var(--text3);margin-bottom:10px}
+.stat-val{font-family:var(--font-head);font-size:34px;font-weight:800;line-height:1;transition:color 0.3s}
+.stat.avail .stat-val{color:var(--accent)}
+.stat.avail::before{background:var(--accent)}
+.stat.taken .stat-val{color:var(--red)}
+.stat.taken::before{background:var(--red)}
+.stat.error .stat-val{color:var(--amber)}
+.stat.error::before{background:var(--amber)}
+.stat.total .stat-val{color:var(--blue)}
+.stat.total::before{background:var(--blue)}
+.stat.counting::before{transform:scaleX(1)}
+
+/* ── NOTICE ── */
+.notice{border-radius:4px;padding:14px 18px;font-size:11px;line-height:1.8;margin-bottom:24px;letter-spacing:0.3px;border-left:2px solid}
+.notice.warn{background:var(--amber-dim);border-color:var(--amber);color:rgba(255,170,0,0.85)}
+.notice.ok{background:var(--accent-dim);border-color:var(--accent);color:rgba(0,255,136,0.9)}
+.notice b{font-weight:500;letter-spacing:0}
+
+/* ── PROXY ROW ── */
+.proxy-row{display:flex;gap:8px;margin-bottom:24px;align-items:stretch}
+.proxy-label{font-family:var(--font-alt);font-size:9px;letter-spacing:3px;color:var(--text3);display:flex;align-items:center;white-space:nowrap}
+.proxy-input{flex:1;font-family:var(--font-mono);font-size:11px;background:var(--ink2);border:1px solid var(--line2);border-radius:4px;padding:10px 14px;color:var(--text);outline:none;transition:border-color 0.2s,box-shadow 0.2s;min-width:0}
+.proxy-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.proxy-input::placeholder{color:var(--text3)}
+
+/* ── SECTION LABELS ── */
+.section-label{font-family:var(--font-alt);font-size:9px;letter-spacing:4px;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--line2)}
+
+/* ── MODE CHIPS ── */
+.modes{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap}
+.mode-chip{font-family:var(--font-alt);font-size:9px;letter-spacing:2px;padding:7px 16px;border-radius:3px;border:1px solid var(--line2);cursor:pointer;background:transparent;color:var(--text3);transition:all 0.15s;text-transform:uppercase}
+.mode-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.mode-chip.active{border-color:var(--accent);color:var(--ink);background:var(--accent);font-weight:500}
+
+/* ── CONTROLS ── */
+.controls{display:flex;gap:8px;margin-bottom:28px;align-items:center;flex-wrap:wrap}
+.btn{font-family:var(--font-alt);font-size:10px;letter-spacing:3px;padding:11px 24px;border-radius:4px;border:1px solid var(--line2);cursor:pointer;background:transparent;color:var(--text2);transition:all 0.15s;text-transform:uppercase;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--text2);color:var(--text)}
+.btn.start{border-color:var(--accent);color:var(--accent)}
+.btn.start:hover:not(:disabled){background:var(--accent);color:var(--ink)}
+.btn.stop{border-color:var(--red);color:var(--red)}
+.btn.stop:hover:not(:disabled){background:var(--red-dim)}
+.btn:disabled{opacity:0.25;cursor:not-allowed}
+.workers-row{display:flex;align-items:center;gap:10px;margin-left:auto;font-size:10px;color:var(--text3);letter-spacing:1px}
+.workers-row input[type=range]{-webkit-appearance:none;appearance:none;width:90px;height:2px;background:var(--line2);border-radius:1px;outline:none}
+.workers-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 8px var(--accent-glow)}
+.workers-row input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;border:none}
+#wLabel{font-family:var(--font-head);font-weight:800;font-size:18px;color:var(--accent);min-width:24px;text-align:right;line-height:1}
+
+/* ── LOG PANEL ── */
+.log-panel{background:var(--ink2);border:1px solid var(--line2);border-radius:6px;overflow:hidden;margin-bottom:24px}
+.log-top{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--line2)}
+.log-live{display:flex;align-items:center;gap:8px;font-family:var(--font-alt);font-size:9px;letter-spacing:3px;color:var(--text3)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.dot.on{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
+#rateOut{font-family:var(--font-head);font-weight:800;font-size:13px;color:var(--accent)}
+.log-body{height:300px;overflow-y:auto;font-size:12px}
+.log-body::-webkit-scrollbar{width:3px}
+.log-body::-webkit-scrollbar-track{background:var(--ink2)}
+.log-body::-webkit-scrollbar-thumb{background:var(--line2)}
+.log-row{display:grid;grid-template-columns:44px 100px 1fr 60px;align-items:center;gap:0;padding:5px 18px;border-bottom:1px solid rgba(255,255,255,0.02);animation:fadeSlide 0.15s ease;border-left:2px solid transparent;transition:background 0.1s}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.log-row:hover{background:var(--ink3)}
+.log-row.avail{border-left-color:var(--accent)}
+.log-row.taken{border-left-color:var(--red);opacity:0.45}
+.log-row.error{border-left-color:var(--amber);opacity:0.35}
+.log-w{font-family:var(--font-alt);font-size:9px;color:var(--text3);letter-spacing:1px}
+.badge{font-family:var(--font-alt);font-size:8px;letter-spacing:2px;padding:3px 8px;border-radius:2px;text-align:center}
+.badge.avail{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,255,136,0.2)}
+.badge.taken{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,59,92,0.2)}
+.badge.error{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(255,170,0,0.2)}
+.log-name{font-family:var(--font-mono);font-size:12px;padding:0 12px;letter-spacing:0.5px}
+.log-row.avail .log-name{color:var(--accent)}
+.log-row.taken .log-name{color:var(--text3)}
+.log-row.error .log-name{color:var(--amber)}
+.log-ts{font-family:var(--font-alt);font-size:9px;color:var(--text3);text-align:right;letter-spacing:1px}
+
+/* ── LISTS ── */
+.lists{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:32px}
+.list-box{background:var(--ink2);border:1px solid var(--line2);border-radius:6px;overflow:hidden}
+.list-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line2)}
+.list-title{display:flex;align-items:center;gap:8px;font-family:var(--font-alt);font-size:9px;letter-spacing:3px}
+.list-dot{width:5px;height:5px;border-radius:50%}
+.list-count{font-family:var(--font-head);font-weight:800;font-size:14px}
+.list-items{height:140px;overflow-y:auto;padding:4px 0}
+.list-items::-webkit-scrollbar{width:2px}
+.list-items::-webkit-scrollbar-thumb{background:var(--line2)}
+.list-item{padding:4px 16px;font-family:var(--font-mono);font-size:11px;animation:fadeSlide 0.12s ease;letter-spacing:0.5px}
+.dl-row{padding:8px 12px;border-top:1px solid var(--line2)}
+.dl-btn{font-family:var(--font-alt);font-size:9px;letter-spacing:2px;padding:6px 14px;border-radius:3px;border:1px solid var(--line2);cursor:pointer;background:transparent;color:var(--text3);transition:all 0.15s}
+
+/* ── FOOTER ── */
+.footer-bar{display:flex;justify-content:space-between;align-items:center;padding-top:20px;border-top:1px solid var(--line2);flex-wrap:wrap;gap:12px}
+.footer-api{font-family:var(--font-alt);font-size:9px;letter-spacing:2px;color:var(--text3)}
+.footer-codes{display:flex;gap:16px}
+.footer-code{font-family:var(--font-alt);font-size:9px;letter-spacing:1px;color:var(--text3);display:flex;align-items:center;gap:5px}
+.footer-code span{border-radius:2px;padding:2px 6px;font-size:8px}
+
+/* ── TELEGRAM CTA ── */
+.tg-banner{background:linear-gradient(135deg,rgba(0,255,136,0.06) 0%,rgba(77,166,255,0.06) 100%);border:1px solid var(--line2);border-radius:6px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.tg-left{}
+.tg-eyebrow{font-family:var(--font-alt);font-size:8px;letter-spacing:4px;color:var(--accent);margin-bottom:6px}
+.tg-title{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--text);line-height:1}
+.tg-desc{font-family:var(--font-mono);font-size:11px;color:var(--text2);margin-top:6px;letter-spacing:0.3px}
+.tg-link{font-family:var(--font-alt);font-size:10px;letter-spacing:3px;padding:12px 28px;border-radius:4px;border:1px solid var(--accent);color:var(--accent);cursor:pointer;background:var(--accent-dim);text-decoration:none;transition:all 0.2s;white-space:nowrap;display:inline-block}
+.tg-link:hover{background:var(--accent);color:var(--ink);box-shadow:0 0 24px var(--accent-glow)}
+
+/* ── RUNNING SHIMMER ── */
+.running .log-top{background:repeating-linear-gradient(90deg,var(--ink2) 0px,var(--ink2) 48px,var(--ink3) 48px,var(--ink3) 96px);background-size:200% 100%;animation:shimTop 3s linear infinite}
+@keyframes shimTop{from{background-position:0 0}to{background-position:-200% 0}}
+
+@media(max-width:600px){
+  .stats-bar{grid-template-columns:repeat(2,1fr)}
+  .lists{grid-template-columns:1fr}
+  .log-row{grid-template-columns:36px 80px 1fr 50px;gap:0}
+  .hero-title{font-size:48px}
+}
 </style>
 </head>
 <body>
-<div class="wrapper">
+<div class="wrap">
 
-  <div class="banner">
-    <pre>
-██╗      █████╗ ██████╗ ██████╗ ████████╗ ██████╗  ██████╗ ██╗
-██║     ██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔═══██╗██╔═══██╗██║
-██║     ███████║██████╔╝██████╔╝   ██║   ██║   ██║██║   ██║██║
-██║     ██╔══██║██╔══██╗██╔═══╝    ██║   ██║   ██║██║   ██║██║
-███████╗██║  ██║██║  ██║██║        ██║   ╚██████╔╝╚██████╔╝███████╗
-╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝</pre>
-    <div class="banner-sub">Minecraft Username Checker By: federalismq on tele</div>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-eyebrow">LARPTOOL &nbsp;/&nbsp; v2.0 &nbsp;/&nbsp; MINECRAFT</div>
+    <h1 class="hero-title">NAME<span>SCAN</span></h1>
+    <div class="hero-sub">Username Availability Checker</div>
+  </header>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat avail"><div class="stat-label">AVAILABLE</div><div class="stat-val" id="cAvail">0</div></div>
+    <div class="stat taken"><div class="stat-label">TAKEN</div><div class="stat-val" id="cTaken">0</div></div>
+    <div class="stat error"><div class="stat-label">CORS ERR</div><div class="stat-val" id="cError">0</div></div>
+    <div class="stat total"><div class="stat-label">SCANNED</div><div class="stat-val" id="cTotal">0</div></div>
   </div>
 
-  <hr class="divider">
-
-  <div class="stats">
-    <div class="stat-card s-avail"><div class="stat-val" id="cAvail">0</div><div class="stat-lbl">AVAILABLE</div></div>
-    <div class="stat-card s-taken"><div class="stat-val" id="cTaken">0</div><div class="stat-lbl">TAKEN</div></div>
-    <div class="stat-card s-error"><div class="stat-val" id="cError">0</div><div class="stat-lbl">CORS ERROR</div></div>
-    <div class="stat-card s-total"><div class="stat-val" id="cTotal">0</div><div class="stat-lbl">CHECKED</div></div>
+  <!-- TELEGRAM CTA -->
+  <div class="tg-banner">
+    <div class="tg-left">
+      <div class="tg-eyebrow">FULL VERSION AVAILABLE</div>
+      <div class="tg-title">Want more features?</div>
+      <div class="tg-desc">Custom wordlists · bulk import · export filters · no CORS limits</div>
+    </div>
+    <a class="tg-link" href="https://t.me/federalismq" target="_blank">PM @FEDERALISMQ</a>
   </div>
 
-  <!-- CORS explanation — updated live by JS -->
-  <div class="cors-notice warn" id="corsNotice">
-    <b>⚠ Why you see CORS ERRORS:</b> Mojang's API does not allow browser requests — this is a browser security rule called CORS, not a bug in this tool. The only way to get real results from a browser is to use a CORS proxy (see below) or run the C# console version instead which talks directly to the API with no restrictions.<br><br>
-    <b>Fix:</b> In the PROXY field below, paste a CORS proxy URL such as <b>https://corsproxy.io/?</b> and the checker will prepend it to every Mojang request, bypassing the browser block. Results will then show AVAILABLE / TAKEN accurately.
+  <!-- CORS NOTICE -->
+  <div class="notice warn" id="corsNotice">
+    <b>⚠ CORS BLOCK ACTIVE</b> — Mojang blocks direct browser requests. Paste a proxy like <b>https://corsproxy.io/?</b> below to get real results, or run the desktop version (no restrictions). Without a proxy, all results will show CORS ERR.
   </div>
 
-  <!-- Proxy input -->
-  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
-    <span style="font-size:11px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap">CORS PROXY:</span>
-    <input id="proxyInput" type="text" placeholder="https://corsproxy.io/? (optional)"
-      value=""
-      style="flex:1;min-width:200px;font-family:'Share Tech Mono',monospace;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px 10px;color:var(--text);outline:none"
-      oninput="updateProxyStatus()">
-    <button class="btn" style="padding:7px 14px;font-size:11px" onclick="testProxy()">TEST</button>
+  <!-- PROXY -->
+  <div class="section-label">CORS PROXY</div>
+  <div class="proxy-row" style="margin-bottom:24px">
+    <input class="proxy-input" id="proxyInput" type="text" placeholder="https://corsproxy.io/?  (optional)" oninput="updateProxy()">
+    <button class="btn" style="padding:10px 18px;font-size:9px;letter-spacing:2px" onclick="testProxy()">TEST</button>
   </div>
 
-  <div class="mode-row">
-    MODE:&nbsp;
-    <button class="mode-btn active" id="mode4L"   onclick="setMode('4letter')">4 LETTERS</button>
-    <button class="mode-btn"        id="mode4AN"  onclick="setMode('4alphanum')">4 LETTERS+NUM</button>
-    <button class="mode-btn"        id="modeWord" onclick="setMode('words')">RARE WORDS</button>
-    <button class="mode-btn"        id="modeMix"  onclick="setMode('mix')">MIX</button>
+  <!-- MODE -->
+  <div class="section-label">SCAN MODE</div>
+  <div class="modes">
+    <button class="mode-chip active" id="m4L"  onclick="setMode('4letter')">4 Letters</button>
+    <button class="mode-chip" id="m4AN" onclick="setMode('4alphanum')">4 Letter+Num</button>
+    <button class="mode-chip" id="mWord" onclick="setMode('words')">Rare Words</button>
+    <button class="mode-chip" id="mMix" onclick="setMode('mix')">Mix</button>
   </div>
 
+  <!-- CONTROLS -->
   <div class="controls">
-    <button class="btn primary" id="btnStart" onclick="startChecker()">▶ START</button>
-    <button class="btn danger"  id="btnStop"  onclick="stopChecker()" disabled>■ STOP</button>
-    <button class="btn" onclick="clearLog()">CLEAR LOG</button>
-    <div class="workers-wrap">
-      WORKERS:&nbsp;<span id="workerLabel">5</span>
-      <input type="range" min="1" max="15" value="5" id="workerSlider"
-             oninput="document.getElementById('workerLabel').textContent=this.value">
+    <button class="btn start" id="btnStart" onclick="startChecker()">▶ START</button>
+    <button class="btn stop" id="btnStop" onclick="stopChecker()" disabled>■ STOP</button>
+    <button class="btn" onclick="clearLog()">CLEAR</button>
+    <div class="workers-row">
+      <span>WORKERS</span>
+      <input type="range" min="1" max="15" value="5" id="wSlider" oninput="document.getElementById('wLabel').textContent=this.value">
+      <span id="wLabel">5</span>
     </div>
   </div>
 
-  <div class="log-panel">
-    <div class="log-header">
-      <span><span class="live-dot off" id="liveDot"></span>LIVE FEED</span>
-      <span id="rateDisplay">0 checks/s</span>
+  <!-- LOG -->
+  <div class="log-panel" id="logPanel">
+    <div class="log-top">
+      <div class="log-live"><span class="dot" id="liveDot"></span><span id="liveLabel">IDLE</span></div>
+      <span id="rateOut" style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">0 checks/s</span>
     </div>
     <div class="log-body" id="logBody"></div>
   </div>
 
-  <div class="saved-section">
-    <div class="saved-box">
-      <div class="saved-header">
-        <span><span class="saved-dot g"></span>WORKING.TXT</span>
-        <span class="saved-count g" id="workCount">0</span>
+  <!-- LISTS -->
+  <div class="lists">
+    <div class="list-box">
+      <div class="list-head">
+        <div class="list-title"><div class="list-dot" style="background:var(--accent)"></div><span style="color:var(--accent)">AVAILABLE</span></div>
+        <div class="list-count" style="color:var(--accent)" id="wCount">0</div>
       </div>
-      <div class="saved-list" id="workList"></div>
-      <div class="dl-row"><button class="dl-btn g" onclick="dlFile('working')">↓ DOWNLOAD</button></div>
+      <div class="list-items" id="workList"></div>
+      <div class="dl-row"><button class="dl-btn" style="border-color:rgba(0,255,136,0.2);color:var(--accent)" onclick="dlFile('working')" onmouseover="this.style.background='var(--accent-dim)'" onmouseout="this.style.background='transparent'">↓ EXPORT</button></div>
     </div>
-    <div class="saved-box">
-      <div class="saved-header">
-        <span><span class="saved-dot" style="background:var(--red)"></span>TAKEN.TXT</span>
-        <span class="saved-count" id="takenCount" style="font-family:'Orbitron',monospace;font-size:11px;color:var(--red)">0</span>
+    <div class="list-box">
+      <div class="list-head">
+        <div class="list-title"><div class="list-dot" style="background:var(--red)"></div><span style="color:var(--red)">TAKEN</span></div>
+        <div class="list-count" style="color:var(--red)" id="tCount">0</div>
       </div>
-      <div class="saved-list" id="takenList"></div>
-      <div class="dl-row"><button class="dl-btn" style="color:var(--text-dim)" onclick="dlFile('taken')"
-        onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">↓ DOWNLOAD</button></div>
+      <div class="list-items" id="takenList"></div>
+      <div class="dl-row"><button class="dl-btn" style="border-color:rgba(255,59,92,0.2);color:var(--red)" onclick="dlFile('taken')" onmouseover="this.style.background='var(--red-dim)'" onmouseout="this.style.background='transparent'">↓ EXPORT</button></div>
     </div>
   </div>
 
-  <div class="footer">
-    <span>api: api.mojang.com/users/profiles/minecraft/{name}</span>
-    <span>204 = available · 200 = taken</span>
+  <!-- FOOTER -->
+  <div class="footer-bar">
+    <div class="footer-api">api.mojang.com/users/profiles/minecraft/{name}</div>
+    <div class="footer-codes">
+      <div class="footer-code"><span style="background:var(--accent-dim);color:var(--accent)">204</span> AVAILABLE</div>
+      <div class="footer-code"><span style="background:rgba(77,166,255,0.1);color:var(--blue)">200</span> TAKEN</div>
+      <div class="footer-code"><span style="background:var(--red-dim);color:var(--red)">ERR</span> CORS BLOCK</div>
+    </div>
   </div>
+
 </div>
 
 <script>
-// ── Charset / word lists ──────────────────────────────────────────────────────
-const alpha    = "abcdefghijklmnopqrstuvwxyz";
-const alphanum = alpha + "0123456789";
+const alpha='abcdefghijklmnopqrstuvwxyz';
+const alphanum=alpha+'0123456789';
+const rareWords=['vext','lorn','dree','trug','sneb','tyke','gorp','froe','ylem','zyme','corf','doit','grum','khat','spiv','woad','yurt','zarf','birl','clag','gley','hoar','kerf','lich','orle','skep','vugh','yawp','bleb','cete','dhal','ghat','hwan','jato','kbar','naik','plie','quod','sati','tace','upas','vela','wame','xyst','zoea','snod','tref','braw','glam','nurd','oink','prex','rath','scry','thro','umph','volt','wyle','yeps','vexil','troth','quern','spall','snood','plash','glebe','drupe','crwth','brume','thews','orlop','marid','liege','knave','ixtle','humph','griot','foehn','ejido','dwale','culet','burin','aspic','ariel','zibet','whelk','voile','uredo','trone','spume','rosin','quaff','oxter','nival','morel','kirby','jurat','inure','hosel','gonzo','frore','droit','coign','brant'];
 
-const rareWords = [
-  "vext","lorn","dree","trug","sneb","tyke","gorp","froe","ylem","zyme",
-  "corf","doit","grum","khat","spiv","woad","yurt","zarf","birl","clag",
-  "gley","hoar","kerf","lich","orle","skep","vugh","yawp","bleb","cete",
-  "dhal","ghat","hwan","jato","kbar","naik","plie","quod","sati","tace",
-  "upas","vela","wame","xyst","zoea","snod","tref","braw","doit","glam",
-  "nurd","oink","prex","rath","scry","thro","umph","volt","wyle","yeps",
-  "vexil","troth","quern","spall","snood","plash","glebe","drupe","crwth",
-  "brume","thews","orlop","marid","liege","knave","ixtle","humph","griot",
-  "foehn","ejido","dwale","culet","burin","aspic","ariel","zibet","whelk",
-  "voile","uredo","trone","spume","rosin","quaff","oxter","nival","morel",
-  "kirby","jurat","inure","hosel","gonzo","frore","droit","coign","brant"
-];
-
-// ── Mode ──────────────────────────────────────────────────────────────────────
-let currentMode = "4letter";
-function setMode(m) {
-  currentMode = m;
-  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
-  const map = {"4letter":"mode4L","4alphanum":"mode4AN","words":"modeWord","mix":"modeMix"};
-  document.getElementById(map[m]).classList.add("active");
+let mode='4letter';
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.mode-chip').forEach(b=>b.classList.remove('active'));
+  const map={'4letter':'m4L','4alphanum':'m4AN','words':'mWord','mix':'mMix'};
+  document.getElementById(map[m]).classList.add('active');
 }
-
-function randStr(cs, len) {
-  let s = "";
-  for (let i = 0; i < len; i++) s += cs[Math.floor(Math.random() * cs.length)];
-  return s;
-}
-
-function gen4Alphanum() {
-  // ensure at least one letter and one digit
-  while (true) {
-    const s = randStr(alphanum, 4);
-    if (/[a-z]/.test(s) && /[0-9]/.test(s)) return s;
+function rand(cs,n){let s='';for(let i=0;i<n;i++)s+=cs[Math.floor(Math.random()*cs.length)];return s}
+function gen4AN(){while(true){const s=rand(alphanum,4);if(/[a-z]/.test(s)&&/[0-9]/.test(s))return s}}
+function genUser(){
+  switch(mode){
+    case'4letter':return rand(alpha,4);
+    case'4alphanum':return gen4AN();
+    case'words':return rareWords[Math.floor(Math.random()*rareWords.length)];
+    case'mix':{const r=Math.random();return r<0.34?rand(alpha,4):r<0.67?gen4AN():rareWords[Math.floor(Math.random()*rareWords.length)]}
   }
 }
 
-function genUsername() {
-  switch (currentMode) {
-    case "4letter":   return randStr(alpha, 4);
-    case "4alphanum": return gen4Alphanum();
-    case "words":     return rareWords[Math.floor(Math.random() * rareWords.length)];
-    case "mix": {
-      const r = Math.random();
-      if (r < 0.34) return randStr(alpha, 4);
-      if (r < 0.67) return gen4Alphanum();
-      return rareWords[Math.floor(Math.random() * rareWords.length)];
-    }
-  }
+function getProxy(){return document.getElementById('proxyInput').value.trim()}
+function updateProxy(){
+  const p=getProxy(),n=document.getElementById('corsNotice');
+  if(p){n.className='notice ok';n.innerHTML=`<b>✓ Proxy active:</b> Requests routing through <b>${p}</b> — real results enabled. If errors persist, the proxy may be rate-limiting.`}
+  else{n.className='notice warn';n.innerHTML='<b>⚠ CORS BLOCK ACTIVE</b> — Paste a proxy like <b>https://corsproxy.io/?</b> above to unlock real results.'}
+}
+async function testProxy(){
+  const p=getProxy(),n=document.getElementById('corsNotice');
+  if(!p){alert('Enter a proxy URL first.');return}
+  n.className='notice warn';n.innerHTML='Testing proxy…';
+  try{
+    const r=await fetch(p+encodeURIComponent('https://api.mojang.com/users/profiles/minecraft/Notch'));
+    if([200,204,404].includes(r.status)){n.className='notice ok';n.innerHTML=`<b>✓ Proxy working!</b> Got HTTP ${r.status} from Mojang. You're good to go.`}
+    else{n.className='notice warn';n.innerHTML=`<b>⚠ Proxy returned HTTP ${r.status}</b> — may be rate-limiting or misconfigured.`}
+  }catch(e){n.className='notice warn';n.innerHTML=`<b>✗ Proxy failed:</b> ${e.message}`}
 }
 
-// ── Proxy ─────────────────────────────────────────────────────────────────────
-function getProxy() {
-  return document.getElementById("proxyInput").value.trim();
+async function checkUser(u){
+  const p=getProxy(),base=`https://api.mojang.com/users/profiles/minecraft/${u}`;
+  try{
+    const r=await fetch(p?p+encodeURIComponent(base):base);
+    if(r.status===204||r.status===404)return'avail';
+    if(r.status===200)return'taken';
+    return'error';
+  }catch{return'error'}
 }
 
-function updateProxyStatus() {
-  const proxy = getProxy();
-  const notice = document.getElementById("corsNotice");
-  if (proxy) {
-    notice.className = "cors-notice ok";
-    notice.innerHTML = `<b>✓ Proxy set:</b> Requests will go through <b>${proxy}</b> — you should now see real AVAILABLE / TAKEN results. If you still see errors, the proxy may be down or rate-limiting you.`;
-  } else {
-    notice.className = "cors-notice warn";
-    notice.innerHTML = `<b>⚠ No proxy set — results will show CORS ERROR.</b> Paste a proxy like <b>https://corsproxy.io/?</b> above to get real results. Alternatively, run the C# console version which has no CORS restriction.`;
-  }
+let running=false,tokens=[],cps=0;
+let nA=0,nT=0,nE=0,nTot=0;
+let wList=[],tList=[];
+const MAX=180;
+const IDS=Array.from({length:15},(_,i)=>'W'+String(i+1).padStart(2,'0'));
+
+function ts(){return[new Date()].map(d=>[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':'))[0]}
+
+function addLog(wid,name,status){
+  const labels={avail:'AVAIL',taken:'TAKEN',error:'CORS'};
+  const body=document.getElementById('logBody');
+  const row=document.createElement('div');
+  row.className=`log-row ${status}`;
+  row.innerHTML=`<span class="log-w">[${wid}]</span><span class="badge ${status}">${labels[status]}</span><span class="log-name">${name}</span><span class="log-ts">${ts()}</span>`;
+  body.appendChild(row);
+  while(body.children.length>MAX)body.removeChild(body.firstChild);
+  body.scrollTop=body.scrollHeight;
 }
 
-async function testProxy() {
-  const proxy = getProxy();
-  if (!proxy) { alert("Enter a proxy URL first."); return; }
-  const notice = document.getElementById("corsNotice");
-  notice.className = "cors-notice warn";
-  notice.innerHTML = "Testing proxy...";
-  try {
-    const url = proxy + encodeURIComponent("https://api.mojang.com/users/profiles/minecraft/Notch");
-    const r = await fetch(url);
-    if (r.status === 200 || r.status === 204 || r.status === 404) {
-      notice.className = "cors-notice ok";
-      notice.innerHTML = `<b>✓ Proxy working!</b> Got HTTP ${r.status} from Mojang via proxy. You're good to start.`;
-    } else {
-      notice.className = "cors-notice warn";
-      notice.innerHTML = `<b>⚠ Proxy returned HTTP ${r.status}.</b> It may be rate-limiting or misconfigured.`;
-    }
-  } catch(e) {
-    notice.className = "cors-notice warn";
-    notice.innerHTML = `<b>✗ Proxy failed:</b> ${e.message}. Try a different proxy.`;
-  }
+function addItem(listId,countId,name,col){
+  const l=document.getElementById(listId);
+  const it=document.createElement('div');
+  it.className='list-item';it.style.color=col;it.textContent=name;
+  l.appendChild(it);l.scrollTop=l.scrollHeight;
+  document.getElementById(countId).textContent=l.children.length;
 }
 
-// ── Mojang API ────────────────────────────────────────────────────────────────
-// 204 No Content = username is available (not registered)
-// 200 OK         = username is taken (profile returned)
-// 404 Not Found  = available on newer API versions (treated same as 204)
-// CORS error     = no proxy set, browser blocked the request
-async function checkUsername(username) {
-  const proxy   = getProxy();
-  const mojang  = `https://api.mojang.com/users/profiles/minecraft/${username}`;
-  const url     = proxy ? proxy + encodeURIComponent(mojang) : mojang;
-  try {
-    const r = await fetch(url);
-    if (r.status === 204 || r.status === 404) return "avail";
-    if (r.status === 200) return "taken";
-    return "error"; // unexpected status
-  } catch {
-    return "error"; // CORS block or network failure
-  }
+function updateStats(){
+  document.getElementById('cAvail').textContent=nA;
+  document.getElementById('cTaken').textContent=nT;
+  document.getElementById('cError').textContent=nE;
+  document.getElementById('cTotal').textContent=nTot;
+  // pulse stat cards
+  ['cAvail','cTaken','cError','cTotal'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.style.transform='scale(1.08)';
+    setTimeout(()=>el.style.transform='',120);
+  });
 }
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let running = false, workerTokens = [];
-let checksThisSec = 0;
-let nAvail = 0, nTaken = 0, nError = 0, nTotal = 0;
-let workingList = [], takenList = [];
-const MAX_LOG = 150;
-const workerIds = Array.from({length:15},(_,i)=>"W"+String(i+1).padStart(2,"0"));
-
-// ── UI ────────────────────────────────────────────────────────────────────────
-function ts() {
-  return [new Date()].map(d=>[d.getHours(),d.getMinutes(),d.getSeconds()]
-    .map(n=>String(n).padStart(2,"0")).join(":"))[0];
-}
-
-function addLog(worker, username, status) {
-  const labels = {avail:"AVAILABLE", taken:"TAKEN", error:"CORS ERR"};
-  const body   = document.getElementById("logBody");
-  const line   = document.createElement("div");
-  line.className = `log-line ${status}`;
-  line.innerHTML = `
-    <span class="log-worker">[${worker}]</span>
-    <span class="badge ${status}">${labels[status]}</span>
-    <span class="log-name ${status}">${username}</span>
-    <span class="log-ts">${ts()}</span>`;
-  body.appendChild(line);
-  while (body.children.length > MAX_LOG) body.removeChild(body.firstChild);
-  body.scrollTop = body.scrollHeight;
-}
-
-function addSavedItem(listId, countId, username, color) {
-  const list = document.getElementById(listId);
-  const item = document.createElement("div");
-  item.className = "saved-item";
-  item.style.color = color;
-  item.textContent = username;
-  list.appendChild(item);
-  list.scrollTop = list.scrollHeight;
-  document.getElementById(countId).textContent = list.children.length;
-}
-
-function updateStats() {
-  document.getElementById("cAvail").textContent = nAvail;
-  document.getElementById("cTaken").textContent = nTaken;
-  document.getElementById("cError").textContent = nError;
-  document.getElementById("cTotal").textContent = nTotal;
-}
-
-// ── Worker ────────────────────────────────────────────────────────────────────
-async function runWorker(id, token) {
-  while (running && token.alive) {
-    const username = genUsername();
-    const status   = await checkUsername(username);
-    if (!token.alive) break;
-
-    checksThisSec++;
-    nTotal++;
-
-    if (status === "avail") {
-      nAvail++;
-      workingList.push(username);
-      addLog(id, username, "avail");
-      addSavedItem("workList", "workCount", username, "var(--green)");
-    } else if (status === "taken") {
-      nTaken++;
-      takenList.push(username);
-      addLog(id, username, "taken");
-      addSavedItem("takenList", "takenCount", username, "var(--red)");
-    } else {
-      nError++;
-      addLog(id, username, "error");
-    }
-
+async function runWorker(id,tok){
+  while(running&&tok.alive){
+    const u=genUser(),status=await checkUser(u);
+    if(!tok.alive)break;
+    cps++;nTot++;
+    if(status==='avail'){nA++;wList.push(u);addLog(id,u,'avail');addItem('workList','wCount',u,'var(--accent)')}
+    else if(status==='taken'){nT++;tList.push(u);addLog(id,u,'taken');addItem('takenList','tCount',u,'var(--red)')}
+    else{nE++;addLog(id,u,'error')}
     updateStats();
-    await new Promise(r => setTimeout(r, 110));
+    await new Promise(r=>setTimeout(r,100));
   }
 }
 
-// ── Controls ──────────────────────────────────────────────────────────────────
-function startChecker() {
-  if (running) return;
-  running = true; workerTokens = [];
-  document.getElementById("btnStart").disabled = true;
-  document.getElementById("btnStop").disabled  = false;
-  document.getElementById("liveDot").classList.remove("off");
-  const n = parseInt(document.getElementById("workerSlider").value);
-  for (let i = 0; i < n; i++) {
-    const token = {alive:true};
-    workerTokens.push(token);
-    runWorker(workerIds[i], token);
-  }
+function startChecker(){
+  if(running)return;
+  running=true;tokens=[];
+  document.getElementById('btnStart').disabled=true;
+  document.getElementById('btnStop').disabled=false;
+  document.getElementById('liveDot').classList.add('on');
+  document.getElementById('liveLabel').textContent='SCANNING';
+  document.getElementById('logPanel').classList.add('running');
+  const n=parseInt(document.getElementById('wSlider').value);
+  for(let i=0;i<n;i++){const t={alive:true};tokens.push(t);runWorker(IDS[i],t)}
 }
-
-function stopChecker() {
-  running = false;
-  workerTokens.forEach(t => t.alive = false);
-  workerTokens = [];
-  document.getElementById("btnStart").disabled = false;
-  document.getElementById("btnStop").disabled  = true;
-  document.getElementById("liveDot").classList.add("off");
+function stopChecker(){
+  running=false;tokens.forEach(t=>t.alive=false);tokens=[];
+  document.getElementById('btnStart').disabled=false;
+  document.getElementById('btnStop').disabled=true;
+  document.getElementById('liveDot').classList.remove('on');
+  document.getElementById('liveLabel').textContent='IDLE';
+  document.getElementById('logPanel').classList.remove('running');
 }
-
-function clearLog() { document.getElementById("logBody").innerHTML = ""; }
-
-function dlFile(type) {
-  const data  = type === "working" ? workingList : takenList;
-  const fname = type === "working" ? "working.txt" : "taken.txt";
-  if (!data.length) return;
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([data.join("\n")], {type:"text/plain"}));
-  a.download = fname; a.click();
+function clearLog(){document.getElementById('logBody').innerHTML=''}
+function dlFile(type){
+  const d=type==='working'?wList:tList,fn=type==='working'?'available.txt':'taken.txt';
+  if(!d.length)return;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d.join('\n')],{type:'text/plain'}));a.download=fn;a.click();
 }
-
-setInterval(() => {
-  document.getElementById("rateDisplay").textContent = `${checksThisSec} checks/s`;
-  checksThisSec = 0;
-}, 1000);
+setInterval(()=>{
+  const el=document.getElementById('rateOut');
+  if(running){el.style.color='var(--accent)';el.textContent=cps+' checks/s'}
+  else{el.style.color='var(--text3)';el.textContent='0 checks/s'}
+  cps=0;
+},1000);
 </script>
 </body>
 </html>
