@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LARPTOOL — Minecraft Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#07070d;--bg2:#0e0e1a;--bg3:#13131f;--border:#1f1f35;
+    --purple:#7c3aed;--purple2:#5b21b6;
+    --green:#22c55e;--green-dim:#14532d;
+    --red:#ef4444;--red-dim:#450a0a;
+    --yellow:#eab308;--yellow-dim:#422006;
+    --cyan:#06b6d4;--gray:#374151;--gray-dim:#1f2937;
+    --text:#e2e8f0;--text-dim:#64748b;--text-muted:#334155;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+    background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)}
+  .wrapper{max-width:880px;margin:0 auto;padding:32px 20px 60px}
+
+  .banner{text-align:center;margin-bottom:28px}
+  .banner pre{color:var(--purple);font-size:clamp(5px,1.1vw,10px);line-height:1.2;display:inline-block;
+    text-shadow:0 0 18px rgba(124,58,237,0.5);animation:flicker 8s infinite}
+  @keyframes flicker{0%,95%,100%{opacity:1}96%{opacity:.85}97%{opacity:1}98%{opacity:.9}}
+  .banner-sub{color:var(--text-dim);font-size:11px;letter-spacing:4px;margin-top:6px}
+  .divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:14px 10px;text-align:center;position:relative;overflow:hidden}
+  .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+  .stat-card.s-avail::after{background:var(--green)}
+  .stat-card.s-taken::after{background:var(--red)}
+  .stat-card.s-error::after{background:var(--yellow)}
+  .stat-card.s-total::after{background:var(--purple)}
+  .stat-val{font-family:'Orbitron',monospace;font-size:26px;font-weight:700;line-height:1;margin-bottom:5px}
+  .stat-card.s-avail .stat-val{color:var(--green)}
+  .stat-card.s-taken .stat-val{color:var(--red)}
+  .stat-card.s-error .stat-val{color:var(--yellow)}
+  .stat-card.s-total .stat-val{color:var(--cyan)}
+  .stat-lbl{font-size:9px;letter-spacing:2px;color:var(--text-dim)}
+
+  /* cors banner */
+  .cors-notice{border-radius:5px;padding:10px 14px;font-size:11px;margin-bottom:14px;line-height:1.7}
+  .cors-notice.warn{background:#1a0d00;border:1px solid #5c3000;color:#f97316}
+  .cors-notice.ok  {background:#001a08;border:1px solid #005c20;color:#22c55e}
+  .cors-notice b{font-weight:500}
+
+  .mode-row{display:flex;gap:8px;margin-bottom:14px;align-items:center;font-size:11px;color:var(--text-dim);letter-spacing:1px;flex-wrap:wrap}
+  .mode-btn{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 14px;border-radius:3px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text-dim);transition:all 0.15s}
+  .mode-btn.active{border-color:var(--purple);color:var(--purple);background:#1a0a3a}
+
+  .controls{display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+  .btn{font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:2px;padding:9px 20px;border-radius:4px;border:1px solid var(--border);cursor:pointer;background:var(--bg3);color:var(--text);transition:all 0.15s;text-transform:uppercase}
+  .btn:hover{border-color:var(--purple);color:var(--purple)}
+  .btn.primary{background:var(--purple2);border-color:var(--purple);color:#fff}
+  .btn.primary:hover{background:var(--purple)}
+  .btn.danger{border-color:var(--red-dim);color:var(--red)}
+  .btn.danger:hover{background:var(--red-dim)}
+  .btn:disabled{opacity:0.35;cursor:not-allowed}
+  .workers-wrap{display:flex;align-items:center;gap:8px;margin-left:auto;color:var(--text-dim);font-size:11px}
+  .workers-wrap input[type=range]{accent-color:var(--purple);width:80px}
+  #workerLabel{color:var(--purple);min-width:20px}
+
+  .log-panel{background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:16px}
+  .log-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:2px;color:var(--text-dim)}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:pulse 1.2s ease-in-out infinite}
+  .live-dot.off{background:var(--gray);animation:none}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(34,197,94,0)}}
+  #rateDisplay{color:var(--purple)}
+  .log-body{height:320px;overflow-y:auto;padding:8px 0;scroll-behavior:smooth}
+  .log-body::-webkit-scrollbar{width:4px}
+  .log-body::-webkit-scrollbar-track{background:var(--bg2)}
+  .log-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  .log-line{display:flex;align-items:center;gap:10px;padding:4px 14px;font-size:12px;border-left:2px solid transparent;animation:slideIn 0.12s ease}
+  @keyframes slideIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
+  .log-line.avail{border-left-color:var(--green)}
+  .log-line.taken{border-left-color:var(--red);opacity:0.5}
+  .log-line.error{border-left-color:var(--yellow);opacity:0.6}
+  .log-worker{color:var(--text-muted);min-width:38px;font-size:10px}
+  .badge{font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:3px;min-width:80px;text-align:center;font-weight:bold}
+  .badge.avail{background:var(--green-dim);color:var(--green);border:1px solid #166534}
+  .badge.taken{background:var(--red-dim);color:var(--red);border:1px solid #7f1d1d}
+  .badge.error{background:var(--yellow-dim);color:var(--yellow);border:1px solid #713f12}
+  .log-name{flex:1}
+  .log-name.avail{color:var(--green)}
+  .log-name.taken{color:#6b7280}
+  .log-name.error{color:var(--yellow)}
+  .log-ts{color:var(--text-muted);font-size:10px}
+
+  .saved-section{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .saved-box{background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+  .saved-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:2px;color:var(--text-dim)}
+  .saved-header span:first-child{display:flex;align-items:center;gap:6px}
+  .saved-dot{width:6px;height:6px;border-radius:50%}
+  .saved-dot.g{background:var(--green)}
+  .saved-count{font-family:'Orbitron',monospace;font-size:11px}
+  .saved-count.g{color:var(--green)}
+  .saved-list{height:130px;overflow-y:auto;padding:6px 0}
+  .saved-list::-webkit-scrollbar{width:3px}
+  .saved-list::-webkit-scrollbar-thumb{background:var(--border)}
+  .saved-item{padding:3px 12px;font-size:12px;animation:slideIn 0.12s ease;color:var(--green)}
+  .dl-row{display:flex;gap:8px;padding:6px 8px}
+  .dl-btn{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 12px;border-radius:3px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--text-dim);transition:all 0.15s}
+  .dl-btn.g:hover{border-color:var(--green);color:var(--green)}
+  .footer{margin-top:20px;display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="banner">
+    <pre>
+██╗      █████╗ ██████╗ ██████╗ ████████╗ ██████╗  ██████╗ ██╗
+██║     ██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔═══██╗██╔═══██╗██║
+██║     ███████║██████╔╝██████╔╝   ██║   ██║   ██║██║   ██║██║
+██║     ██╔══██║██╔══██╗██╔═══╝    ██║   ██║   ██║██║   ██║██║
+███████╗██║  ██║██║  ██║██║        ██║   ╚██████╔╝╚██████╔╝███████╗
+╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝        ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝</pre>
+    <div class="banner-sub">Minecraft Username Checker</div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="stats">
+    <div class="stat-card s-avail"><div class="stat-val" id="cAvail">0</div><div class="stat-lbl">AVAILABLE</div></div>
+    <div class="stat-card s-taken"><div class="stat-val" id="cTaken">0</div><div class="stat-lbl">TAKEN</div></div>
+    <div class="stat-card s-error"><div class="stat-val" id="cError">0</div><div class="stat-lbl">CORS ERROR</div></div>
+    <div class="stat-card s-total"><div class="stat-val" id="cTotal">0</div><div class="stat-lbl">CHECKED</div></div>
+  </div>
+
+  <!-- CORS explanation — updated live by JS -->
+  <div class="cors-notice warn" id="corsNotice">
+    <b>⚠ Why you see CORS ERRORS:</b> Mojang's API does not allow browser requests — this is a browser security rule called CORS, not a bug in this tool. The only way to get real results from a browser is to use a CORS proxy (see below) or run the C# console version instead which talks directly to the API with no restrictions.<br><br>
+    <b>Fix:</b> In the PROXY field below, paste a CORS proxy URL such as <b>https://corsproxy.io/?</b> and the checker will prepend it to every Mojang request, bypassing the browser block. Results will then show AVAILABLE / TAKEN accurately.
+  </div>
+
+  <!-- Proxy input -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap">
+    <span style="font-size:11px;color:var(--text-dim);letter-spacing:1px;white-space:nowrap">CORS PROXY:</span>
+    <input id="proxyInput" type="text" placeholder="https://corsproxy.io/? (optional)"
+      value=""
+      style="flex:1;min-width:200px;font-family:'Share Tech Mono',monospace;font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px 10px;color:var(--text);outline:none"
+      oninput="updateProxyStatus()">
+    <button class="btn" style="padding:7px 14px;font-size:11px" onclick="testProxy()">TEST</button>
+  </div>
+
+  <div class="mode-row">
+    MODE:&nbsp;
+    <button class="mode-btn active" id="mode4L"   onclick="setMode('4letter')">4 LETTERS</button>
+    <button class="mode-btn"        id="mode4AN"  onclick="setMode('4alphanum')">4 LETTERS+NUM</button>
+    <button class="mode-btn"        id="modeWord" onclick="setMode('words')">RARE WORDS</button>
+    <button class="mode-btn"        id="modeMix"  onclick="setMode('mix')">MIX</button>
+  </div>
+
+  <div class="controls">
+    <button class="btn primary" id="btnStart" onclick="startChecker()">▶ START</button>
+    <button class="btn danger"  id="btnStop"  onclick="stopChecker()" disabled>■ STOP</button>
+    <button class="btn" onclick="clearLog()">CLEAR LOG</button>
+    <div class="workers-wrap">
+      WORKERS:&nbsp;<span id="workerLabel">5</span>
+      <input type="range" min="1" max="15" value="5" id="workerSlider"
+             oninput="document.getElementById('workerLabel').textContent=this.value">
+    </div>
+  </div>
+
+  <div class="log-panel">
+    <div class="log-header">
+      <span><span class="live-dot off" id="liveDot"></span>LIVE FEED</span>
+      <span id="rateDisplay">0 checks/s</span>
+    </div>
+    <div class="log-body" id="logBody"></div>
+  </div>
+
+  <div class="saved-section">
+    <div class="saved-box">
+      <div class="saved-header">
+        <span><span class="saved-dot g"></span>WORKING.TXT</span>
+        <span class="saved-count g" id="workCount">0</span>
+      </div>
+      <div class="saved-list" id="workList"></div>
+      <div class="dl-row"><button class="dl-btn g" onclick="dlFile('working')">↓ DOWNLOAD</button></div>
+    </div>
+    <div class="saved-box">
+      <div class="saved-header">
+        <span><span class="saved-dot" style="background:var(--red)"></span>TAKEN.TXT</span>
+        <span class="saved-count" id="takenCount" style="font-family:'Orbitron',monospace;font-size:11px;color:var(--red)">0</span>
+      </div>
+      <div class="saved-list" id="takenList"></div>
+      <div class="dl-row"><button class="dl-btn" style="color:var(--text-dim)" onclick="dlFile('taken')"
+        onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">↓ DOWNLOAD</button></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>api: api.mojang.com/users/profiles/minecraft/{name}</span>
+    <span>204 = available · 200 = taken</span>
+  </div>
+</div>
+
+<script>
+// ── Charset / word lists ──────────────────────────────────────────────────────
+const alpha    = "abcdefghijklmnopqrstuvwxyz";
+const alphanum = alpha + "0123456789";
+
+const rareWords = [
+  "vext","lorn","dree","trug","sneb","tyke","gorp","froe","ylem","zyme",
+  "corf","doit","grum","khat","spiv","woad","yurt","zarf","birl","clag",
+  "gley","hoar","kerf","lich","orle","skep","vugh","yawp","bleb","cete",
+  "dhal","ghat","hwan","jato","kbar","naik","plie","quod","sati","tace",
+  "upas","vela","wame","xyst","zoea","snod","tref","braw","doit","glam",
+  "nurd","oink","prex","rath","scry","thro","umph","volt","wyle","yeps",
+  "vexil","troth","quern","spall","snood","plash","glebe","drupe","crwth",
+  "brume","thews","orlop","marid","liege","knave","ixtle","humph","griot",
+  "foehn","ejido","dwale","culet","burin","aspic","ariel","zibet","whelk",
+  "voile","uredo","trone","spume","rosin","quaff","oxter","nival","morel",
+  "kirby","jurat","inure","hosel","gonzo","frore","droit","coign","brant"
+];
+
+// ── Mode ──────────────────────────────────────────────────────────────────────
+let currentMode = "4letter";
+function setMode(m) {
+  currentMode = m;
+  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+  const map = {"4letter":"mode4L","4alphanum":"mode4AN","words":"modeWord","mix":"modeMix"};
+  document.getElementById(map[m]).classList.add("active");
+}
+
+function randStr(cs, len) {
+  let s = "";
+  for (let i = 0; i < len; i++) s += cs[Math.floor(Math.random() * cs.length)];
+  return s;
+}
+
+function gen4Alphanum() {
+  // ensure at least one letter and one digit
+  while (true) {
+    const s = randStr(alphanum, 4);
+    if (/[a-z]/.test(s) && /[0-9]/.test(s)) return s;
+  }
+}
+
+function genUsername() {
+  switch (currentMode) {
+    case "4letter":   return randStr(alpha, 4);
+    case "4alphanum": return gen4Alphanum();
+    case "words":     return rareWords[Math.floor(Math.random() * rareWords.length)];
+    case "mix": {
+      const r = Math.random();
+      if (r < 0.34) return randStr(alpha, 4);
+      if (r < 0.67) return gen4Alphanum();
+      return rareWords[Math.floor(Math.random() * rareWords.length)];
+    }
+  }
+}
+
+// ── Proxy ─────────────────────────────────────────────────────────────────────
+function getProxy() {
+  return document.getElementById("proxyInput").value.trim();
+}
+
+function updateProxyStatus() {
+  const proxy = getProxy();
+  const notice = document.getElementById("corsNotice");
+  if (proxy) {
+    notice.className = "cors-notice ok";
+    notice.innerHTML = `<b>✓ Proxy set:</b> Requests will go through <b>${proxy}</b> — you should now see real AVAILABLE / TAKEN results. If you still see errors, the proxy may be down or rate-limiting you.`;
+  } else {
+    notice.className = "cors-notice warn";
+    notice.innerHTML = `<b>⚠ No proxy set — results will show CORS ERROR.</b> Paste a proxy like <b>https://corsproxy.io/?</b> above to get real results. Alternatively, run the C# console version which has no CORS restriction.`;
+  }
+}
+
+async function testProxy() {
+  const proxy = getProxy();
+  if (!proxy) { alert("Enter a proxy URL first."); return; }
+  const notice = document.getElementById("corsNotice");
+  notice.className = "cors-notice warn";
+  notice.innerHTML = "Testing proxy...";
+  try {
+    const url = proxy + encodeURIComponent("https://api.mojang.com/users/profiles/minecraft/Notch");
+    const r = await fetch(url);
+    if (r.status === 200 || r.status === 204 || r.status === 404) {
+      notice.className = "cors-notice ok";
+      notice.innerHTML = `<b>✓ Proxy working!</b> Got HTTP ${r.status} from Mojang via proxy. You're good to start.`;
+    } else {
+      notice.className = "cors-notice warn";
+      notice.innerHTML = `<b>⚠ Proxy returned HTTP ${r.status}.</b> It may be rate-limiting or misconfigured.`;
+    }
+  } catch(e) {
+    notice.className = "cors-notice warn";
+    notice.innerHTML = `<b>✗ Proxy failed:</b> ${e.message}. Try a different proxy.`;
+  }
+}
+
+// ── Mojang API ────────────────────────────────────────────────────────────────
+// 204 No Content = username is available (not registered)
+// 200 OK         = username is taken (profile returned)
+// 404 Not Found  = available on newer API versions (treated same as 204)
+// CORS error     = no proxy set, browser blocked the request
+async function checkUsername(username) {
+  const proxy   = getProxy();
+  const mojang  = `https://api.mojang.com/users/profiles/minecraft/${username}`;
+  const url     = proxy ? proxy + encodeURIComponent(mojang) : mojang;
+  try {
+    const r = await fetch(url);
+    if (r.status === 204 || r.status === 404) return "avail";
+    if (r.status === 200) return "taken";
+    return "error"; // unexpected status
+  } catch {
+    return "error"; // CORS block or network failure
+  }
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let running = false, workerTokens = [];
+let checksThisSec = 0;
+let nAvail = 0, nTaken = 0, nError = 0, nTotal = 0;
+let workingList = [], takenList = [];
+const MAX_LOG = 150;
+const workerIds = Array.from({length:15},(_,i)=>"W"+String(i+1).padStart(2,"0"));
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function ts() {
+  return [new Date()].map(d=>[d.getHours(),d.getMinutes(),d.getSeconds()]
+    .map(n=>String(n).padStart(2,"0")).join(":"))[0];
+}
+
+function addLog(worker, username, status) {
+  const labels = {avail:"AVAILABLE", taken:"TAKEN", error:"CORS ERR"};
+  const body   = document.getElementById("logBody");
+  const line   = document.createElement("div");
+  line.className = `log-line ${status}`;
+  line.innerHTML = `
+    <span class="log-worker">[${worker}]</span>
+    <span class="badge ${status}">${labels[status]}</span>
+    <span class="log-name ${status}">${username}</span>
+    <span class="log-ts">${ts()}</span>`;
+  body.appendChild(line);
+  while (body.children.length > MAX_LOG) body.removeChild(body.firstChild);
+  body.scrollTop = body.scrollHeight;
+}
+
+function addSavedItem(listId, countId, username, color) {
+  const list = document.getElementById(listId);
+  const item = document.createElement("div");
+  item.className = "saved-item";
+  item.style.color = color;
+  item.textContent = username;
+  list.appendChild(item);
+  list.scrollTop = list.scrollHeight;
+  document.getElementById(countId).textContent = list.children.length;
+}
+
+function updateStats() {
+  document.getElementById("cAvail").textContent = nAvail;
+  document.getElementById("cTaken").textContent = nTaken;
+  document.getElementById("cError").textContent = nError;
+  document.getElementById("cTotal").textContent = nTotal;
+}
+
+// ── Worker ────────────────────────────────────────────────────────────────────
+async function runWorker(id, token) {
+  while (running && token.alive) {
+    const username = genUsername();
+    const status   = await checkUsername(username);
+    if (!token.alive) break;
+
+    checksThisSec++;
+    nTotal++;
+
+    if (status === "avail") {
+      nAvail++;
+      workingList.push(username);
+      addLog(id, username, "avail");
+      addSavedItem("workList", "workCount", username, "var(--green)");
+    } else if (status === "taken") {
+      nTaken++;
+      takenList.push(username);
+      addLog(id, username, "taken");
+      addSavedItem("takenList", "takenCount", username, "var(--red)");
+    } else {
+      nError++;
+      addLog(id, username, "error");
+    }
+
+    updateStats();
+    await new Promise(r => setTimeout(r, 110));
+  }
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+function startChecker() {
+  if (running) return;
+  running = true; workerTokens = [];
+  document.getElementById("btnStart").disabled = true;
+  document.getElementById("btnStop").disabled  = false;
+  document.getElementById("liveDot").classList.remove("off");
+  const n = parseInt(document.getElementById("workerSlider").value);
+  for (let i = 0; i < n; i++) {
+    const token = {alive:true};
+    workerTokens.push(token);
+    runWorker(workerIds[i], token);
+  }
+}
+
+function stopChecker() {
+  running = false;
+  workerTokens.forEach(t => t.alive = false);
+  workerTokens = [];
+  document.getElementById("btnStart").disabled = false;
+  document.getElementById("btnStop").disabled  = true;
+  document.getElementById("liveDot").classList.add("off");
+}
+
+function clearLog() { document.getElementById("logBody").innerHTML = ""; }
+
+function dlFile(type) {
+  const data  = type === "working" ? workingList : takenList;
+  const fname = type === "working" ? "working.txt" : "taken.txt";
+  if (!data.length) return;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([data.join("\n")], {type:"text/plain"}));
+  a.download = fname; a.click();
+}
+
+setInterval(() => {
+  document.getElementById("rateDisplay").textContent = `${checksThisSec} checks/s`;
+  checksThisSec = 0;
+}, 1000);
+</script>
+</body>
+</html>
